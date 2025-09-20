@@ -3,7 +3,8 @@
 
 import { DailySummary } from '@/types/git';
 import { EnhancedDailySummary } from '@/types/ai';
-import { formatThaiDate } from '@/lib/utils/date-formatter';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface DailySummariesViewProps {
   summaries: DailySummary[] | EnhancedDailySummary[];
@@ -20,10 +21,11 @@ export default function DailySummariesView({
 }: DailySummariesViewProps) {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Daily Summaries
-        </h3>
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily Summaries</CardTitle>
+        </CardHeader>
+        <CardContent>
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
           <div className="ml-3">
@@ -38,64 +40,69 @@ export default function DailySummariesView({
           </div>
         </div>
         
-        {aiEnabled && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex items-center">
-              <svg className="h-4 w-4 text-blue-400 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-              </svg>
-              <div className="ml-2">
-                <p className="text-xs text-blue-700">
-                  AI is analyzing your commits to create intelligent, contextual summaries.
-                  This process typically takes 10-30 seconds depending on the number of commits.
-                </p>
+          {aiEnabled && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-center">
+                <svg className="h-4 w-4 text-blue-400 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                </svg>
+                <div className="ml-2">
+                  <p className="text-xs text-blue-700">
+                    AI is analyzing your commits to create intelligent, contextual summaries.
+                    This process typically takes 10-30 seconds depending on the number of commits.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Daily Summaries
-        </h3>
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h4 className="text-sm font-medium text-red-800">Error generating summaries</h4>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily Summaries</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h4 className="text-sm font-medium text-red-800">Error generating summaries</h4>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (summaries.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          Daily Summaries
-        </h3>
-        <div className="text-center py-8">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h4 className="mt-4 text-lg font-medium text-gray-900">No summaries available</h4>
-          <p className="mt-2 text-sm text-gray-500">
-            Summaries will be generated automatically when commits are found.
-          </p>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily Summaries</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h4 className="mt-4 text-lg font-medium text-gray-900">No summaries available</h4>
+            <p className="mt-2 text-sm text-gray-500">
+              Summaries will be generated automatically when commits are found.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -105,15 +112,16 @@ export default function DailySummariesView({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Daily Summaries
-        </h3>
-        <span className="text-sm text-gray-500">
-          {summaries.length} day{summaries.length !== 1 ? 's' : ''} summarized
-        </span>
-      </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Daily Summaries</CardTitle>
+          <span className="text-sm text-muted-foreground">
+            {summaries.length} day{summaries.length !== 1 ? 's' : ''} summarized
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent>
 
       <div className="space-y-4">
         {sortedSummaries.map((summary) => {
@@ -141,12 +149,12 @@ export default function DailySummariesView({
                     {thaiDateLine}
                   </h4>
                   {enhancedSummary?.hasAISummary && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       AI Enhanced
-                    </span>
+                    </Badge>
                   )}
                 </div>
                 <div className="flex items-center text-xs text-gray-500">
@@ -205,22 +213,23 @@ export default function DailySummariesView({
         })}
       </div>
 
-      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-4 w-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-2">
-            <p className="text-xs text-green-700">
-              Summaries are automatically cached and updated when you refresh. 
-              {aiEnabled && ' AI-enhanced summaries provide intelligent, contextual insights.'}
-              {' '}Dates are shown in Thai Buddhist calendar format.
-            </p>
+        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-4 w-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-2">
+              <p className="text-xs text-green-700">
+                Summaries are automatically cached and updated when you refresh. 
+                {aiEnabled && ' AI-enhanced summaries provide intelligent, contextual insights.'}
+                {' '}Dates are shown in Thai Buddhist calendar format.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

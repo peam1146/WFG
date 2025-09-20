@@ -8,6 +8,10 @@ import { fetchGitCommits } from '@/lib/actions/git-actions';
 import { generateSummaries } from '@/lib/actions/summary-actions';
 import { formatDateForInput, getDaysAgo } from '@/lib/utils/date-formatter';
 import { GitCommit, DailySummary } from '@/types/git';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface GitFilterFormProps {
   onCommitsResult: (commits: GitCommit[]) => void;
@@ -79,81 +83,72 @@ export default function GitFilterForm({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Git Log Filter
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label 
-            htmlFor="author" 
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Author Name
-          </label>
-          <input
-            type="text"
-            id="author"
-            value={formData.author}
-            onChange={(e) => handleInputChange('author', e.target.value)}
-            placeholder="Enter Git author name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={isPending}
-            required
-          />
-        </div>
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Git Log Filter</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="author">Author Name</Label>
+            <Input
+              type="text"
+              id="author"
+              value={formData.author}
+              onChange={(e) => handleInputChange('author', e.target.value)}
+              placeholder="Enter Git author name"
+              disabled={isPending}
+              required
+            />
+          </div>
 
-        <div>
-          <label 
-            htmlFor="since" 
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Since Date (within last 31 days)
-          </label>
-          <input
-            type="date"
-            id="since"
-            value={formData.since}
-            onChange={(e) => handleInputChange('since', e.target.value)}
-            min={formatDateForInput(getDaysAgo(31))}
-            max={formatDateForInput(new Date())}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={isPending}
-            required
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="since">Since Date (within last 31 days)</Label>
+            <Input
+              type="date"
+              id="since"
+              value={formData.since}
+              onChange={(e) => handleInputChange('since', e.target.value)}
+              min={formatDateForInput(getDaysAgo(31))}
+              max={formatDateForInput(new Date())}
+              disabled={isPending}
+              required
+            />
+          </div>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPending ? 'Loading...' : 'Filter Commits'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              setFormData({
-                author: '',
-                since: formatDateForInput(getDaysAgo(7))
-              });
-            }}
-            disabled={isPending}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Reset
-          </button>
-        </div>
-      </form>
+          <div className="flex gap-3">
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="flex-1"
+              size="lg"
+            >
+              {isPending ? 'Loading...' : 'Filter Commits'}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setFormData({
+                  author: '',
+                  since: formatDateForInput(getDaysAgo(7))
+                });
+              }}
+              disabled={isPending}
+              size="lg"
+            >
+              Reset
+            </Button>
+          </div>
+        </form>
 
-      <div className="mt-4 text-xs text-gray-500">
-        <p>• Enter the exact Git author name as it appears in commits</p>
-        <p>• Date range is limited to the last 31 days for performance</p>
-        <p>• Merge commits are automatically excluded</p>
-      </div>
-    </div>
+        <div className="mt-4 text-xs text-muted-foreground">
+          <p>• Enter the exact Git author name as it appears in commits</p>
+          <p>• Date range is limited to the last 31 days for performance</p>
+          <p>• Merge commits are automatically excluded</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
