@@ -1,50 +1,70 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: Initial → 1.0.0
+- New constitution for WFG (Worklog From Git) project
+- Technology stack: Bun + Next.js + Tailwind 4
+- Templates requiring updates: ✅ Initial setup
+- Follow-up TODOs: None
+-->
+
+# WFG Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Modern Stack First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All development MUST use the established technology stack: Bun as runtime and package manager, Next.js as React framework, Tailwind 4 for styling. No alternative technologies without explicit justification and approval. CLI tools (bun, bunx) are preferred for initialization and package management over manual configuration.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Git-Centric Workflow
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+The application's core purpose is to generate worklogs from Git history. All features MUST enhance or support this primary function. Git integration is non-negotiable and must be reliable, performant, and accurate.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Desktop-First Experience
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+User interface MUST be optimized for desktop usage with responsive design principles. Mobile compatibility is secondary. Focus on productivity features suitable for developers reviewing their work history.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Performance & Efficiency
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Leverage Bun's performance advantages throughout the stack. Bundle sizes must be minimized, load times optimized, and Git operations must be efficient even with large repositories.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Developer Experience
+
+Development workflow must prioritize speed and simplicity. Hot reload, fast builds, and clear error messages are mandatory. Documentation must be comprehensive and up-to-date.
+
+## Technology Standards
+
+### Required Stack
+
+- **Runtime**: Bun (latest stable)
+- **Framework**: Next.js (latest stable with App Router)
+- **Styling**: Tailwind CSS 4.x
+- **Package Manager**: Bun (no npm/yarn/pnpm)
+
+### Code Quality
+
+- TypeScript is mandatory for type safety
+- ESLint and Prettier configurations must be maintained
+- Component-based architecture with clear separation of concerns
+- Consistent naming conventions following Next.js best practices
+
+## Development Workflow
+
+### Setup Requirements
+
+- Use CLI tools (bun create, bunx) for project initialization
+- Read official documentation via context7 MCP before implementation
+- No manual package.json editing without understanding dependencies
+- Environment-specific configurations for dev, test, and production
+
+### Git Integration Standards
+
+- Git operations must be secure and read-only by default
+- Support for multiple repository formats and structures
+- Efficient parsing of Git history and metadata
+- Clear error handling for Git-related operations
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices. All code changes must align with these principles. Amendments require documentation of rationale and impact assessment.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-09-20 | **Last Amended**: 2025-09-20
