@@ -7,7 +7,8 @@ import { useState, useTransition } from 'react';
 import { fetchGitCommits } from '@/lib/actions/git-actions';
 import { generateSummaries } from '@/lib/actions/summary-actions';
 import { formatDateForInput, getDaysAgo } from '@/lib/utils/date-formatter';
-import { GitCommit, DailySummary } from '@/types/git';
+import { GitCommit } from '@/types/git';
+import { EnhancedDailySummary } from '@/types/ai';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +16,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface GitFilterFormProps {
   onCommitsResult: (commits: GitCommit[]) => void;
-  onSummariesResult: (summaries: DailySummary[]) => void;
+  onSummariesResult: (summaries: EnhancedDailySummary[]) => void;
   onError: (error: string) => void;
   onLoading: (loading: boolean) => void;
 }

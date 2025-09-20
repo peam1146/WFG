@@ -1,10 +1,19 @@
 // Database service for DailySummary and AI operations using Prisma
 // Handles all database interactions for daily summaries and AI enhancements
 
-import { PrismaClient, DailySummary as PrismaDailySummary, AISummary as PrismaAISummary, APIUsageTracking as PrismaAPIUsageTracking } from '@prisma/client';
-import { DailySummary } from '@/types/git';
-import { AISummary, AISummaryInput, EnhancedDailySummary } from '@/types/ai';
-import { APIUsageTracking, APIUsageInput, APIUsageStats } from '@/types/api-usage';
+import { AISummary, AISummaryInput, EnhancedDailySummary } from "@/types/ai";
+import {
+  APIUsageInput,
+  APIUsageStats,
+  APIUsageTracking,
+} from "@/types/api-usage";
+import { DailySummary } from "@/types/git";
+import {
+  AISummary as PrismaAISummary,
+  APIUsageTracking as PrismaAPIUsageTracking,
+  PrismaClient,
+  DailySummary as PrismaDailySummary,
+} from "@prisma/client";
 
 export class DatabaseService {
   private prisma: PrismaClient;
@@ -21,21 +30,21 @@ export class DatabaseService {
    * @returns Promise resolving to array of DailySummary objects
    */
   async getSummaries(
-    authorName: string, 
-    since: Date, 
+    authorName: string,
+    since: Date,
     repositoryUrl: string
   ): Promise<DailySummary[]> {
     const summaries = await this.prisma.dailySummary.findMany({
       where: {
         authorName,
         summaryDate: {
-          gte: since
+          gte: since,
         },
-        repositoryUrl
+        repositoryUrl,
       },
       orderBy: {
-        summaryDate: 'asc'
-      }
+        summaryDate: "asc",
+      },
     });
 
     return summaries.map(this.transformPrismaToType);
@@ -46,9 +55,11 @@ export class DatabaseService {
    * @param summaryData - Summary data to create
    * @returns Promise resolving to created DailySummary
    */
-  async createSummary(summaryData: Omit<DailySummary, 'id' | 'createdAt' | 'updatedAt'>): Promise<DailySummary> {
+  async createSummary(
+    summaryData: Omit<DailySummary, "id" | "createdAt" | "updatedAt">
+  ): Promise<DailySummary> {
     const created = await this.prisma.dailySummary.create({
-      data: summaryData
+      data: summaryData,
     });
 
     return this.transformPrismaToType(created);
@@ -59,20 +70,22 @@ export class DatabaseService {
    * @param summaryData - Summary data to upsert
    * @returns Promise resolving to upserted DailySummary
    */
-  async upsertSummary(summaryData: Omit<DailySummary, 'id' | 'createdAt' | 'updatedAt'>): Promise<DailySummary> {
+  async upsertSummary(
+    summaryData: Omit<DailySummary, "id" | "createdAt" | "updatedAt">
+  ): Promise<DailySummary> {
     const upserted = await this.prisma.dailySummary.upsert({
       where: {
         authorName_summaryDate_repositoryUrl: {
           authorName: summaryData.authorName,
           summaryDate: summaryData.summaryDate,
-          repositoryUrl: summaryData.repositoryUrl
-        }
+          repositoryUrl: summaryData.repositoryUrl,
+        },
       },
       update: {
         summaryText: summaryData.summaryText,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
-      create: summaryData
+      create: summaryData,
     });
 
     return this.transformPrismaToType(upserted);
@@ -85,18 +98,18 @@ export class DatabaseService {
    * @param repositoryUrl - Repository URL to filter by
    */
   async deleteSummaries(
-    authorName: string, 
-    since: Date, 
+    authorName: string,
+    since: Date,
     repositoryUrl: string
   ): Promise<void> {
     await this.prisma.dailySummary.deleteMany({
       where: {
         authorName,
         summaryDate: {
-          gte: since
+          gte: since,
         },
-        repositoryUrl
-      }
+        repositoryUrl,
+      },
     });
   }
 
@@ -124,14 +137,25 @@ export class DatabaseService {
    * @returns Promise resolving to created AISummary
    */
   async saveAISummary(aiSummaryData: AISummaryInput): Promise<AISummary> {
-    const created = await this.prisma.aISummary.create({
-      data: {
+    const created = await this.prisma.aISummary.upsert({
+      where: {
+        authorName_summaryDate: {
+          authorName: aiSummaryData.authorName,
+          summaryDate: aiSummaryData.summaryDate,
+        },
+      },
+      update: {
+        commitHashList: JSON.stringify(aiSummaryData.commitHashList),
+        aiSummaryText: aiSummaryData.aiSummaryText,
+        modelUsed: aiSummaryData.modelUsed,
+      },
+      create: {
         authorName: aiSummaryData.authorName,
         summaryDate: aiSummaryData.summaryDate,
         commitHashList: JSON.stringify(aiSummaryData.commitHashList),
         aiSummaryText: aiSummaryData.aiSummaryText,
-        modelUsed: aiSummaryData.modelUsed
-      }
+        modelUsed: aiSummaryData.modelUsed,
+      },
     });
 
     return this.transformPrismaAIToType(created);
@@ -143,14 +167,17 @@ export class DatabaseService {
    * @param summaryDate - Date to filter by
    * @returns Promise resolving to AISummary or null
    */
-  async getAISummary(authorName: string, summaryDate: Date): Promise<AISummary | null> {
+  async getAISummary(
+    authorName: string,
+    summaryDate: Date
+  ): Promise<AISummary | null> {
     const aiSummary = await this.prisma.aISummary.findUnique({
       where: {
         authorName_summaryDate: {
           authorName,
-          summaryDate
-        }
-      }
+          summaryDate,
+        },
+      },
     });
 
     return aiSummary ? this.transformPrismaAIToType(aiSummary) : null;
@@ -166,9 +193,9 @@ export class DatabaseService {
       where: {
         authorName,
         summaryDate: {
-          gte: since
-        }
-      }
+          gte: since,
+        },
+      },
     });
   }
 
@@ -180,24 +207,24 @@ export class DatabaseService {
    * @returns Promise resolving to array of EnhancedDailySummary objects
    */
   async getDailySummaries(
-    authorName: string, 
-    since: Date, 
+    authorName: string,
+    since: Date,
     repositoryUrl: string
   ): Promise<EnhancedDailySummary[]> {
     const summaries = await this.prisma.dailySummary.findMany({
       where: {
         authorName,
         summaryDate: {
-          gte: since
+          gte: since,
         },
-        repositoryUrl
+        repositoryUrl,
       },
       include: {
-        aiSummary: true
+        aiSummary: true,
       },
       orderBy: {
-        summaryDate: 'asc'
-      }
+        summaryDate: "asc",
+      },
     });
 
     return summaries.map(this.transformPrismaToEnhancedType);
@@ -210,7 +237,7 @@ export class DatabaseService {
    * @returns Promise resolving to saved EnhancedDailySummary
    */
   async saveDailySummary(
-    summaryData: Omit<DailySummary, 'id' | 'createdAt' | 'updatedAt'>,
+    summaryData: Omit<DailySummary, "id" | "createdAt" | "updatedAt">,
     aiSummaryId?: number
   ): Promise<EnhancedDailySummary> {
     const saved = await this.prisma.dailySummary.upsert({
@@ -218,23 +245,23 @@ export class DatabaseService {
         authorName_summaryDate_repositoryUrl: {
           authorName: summaryData.authorName,
           summaryDate: summaryData.summaryDate,
-          repositoryUrl: summaryData.repositoryUrl
-        }
+          repositoryUrl: summaryData.repositoryUrl,
+        },
       },
       update: {
         summaryText: summaryData.summaryText,
         hasAISummary: !!aiSummaryId,
         aiSummaryId: aiSummaryId || null,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       create: {
         ...summaryData,
         hasAISummary: !!aiSummaryId,
-        aiSummaryId: aiSummaryId || null
+        aiSummaryId: aiSummaryId || null,
       },
       include: {
-        aiSummary: true
-      }
+        aiSummary: true,
+      },
     });
 
     return this.transformPrismaToEnhancedType(saved);
@@ -251,7 +278,7 @@ export class DatabaseService {
    */
   async recordAPIUsage(usageData: APIUsageInput): Promise<APIUsageTracking> {
     const created = await this.prisma.aPIUsageTracking.create({
-      data: usageData
+      data: usageData,
     });
 
     return this.transformPrismaUsageToType(created);
@@ -265,14 +292,14 @@ export class DatabaseService {
    */
   async getAPIUsageStats(since: Date, until?: Date): Promise<APIUsageStats> {
     const endDate = until || new Date();
-    
+
     const usageRecords = await this.prisma.aPIUsageTracking.findMany({
       where: {
         requestTimestamp: {
           gte: since,
-          lte: endDate
-        }
-      }
+          lte: endDate,
+        },
+      },
     });
 
     if (usageRecords.length === 0) {
@@ -281,14 +308,22 @@ export class DatabaseService {
         tokens: 0,
         errors: 0,
         averageLatency: 0,
-        successRate: 0
+        successRate: 0,
       };
     }
 
     const totalRequests = usageRecords.length;
-    const totalTokens = usageRecords.reduce((sum, record) => sum + record.tokensUsed, 0);
-    const totalErrors = usageRecords.filter(record => record.requestStatus !== 'success').length;
-    const totalLatency = usageRecords.reduce((sum, record) => sum + record.requestDuration, 0);
+    const totalTokens = usageRecords.reduce(
+      (sum, record) => sum + record.tokensUsed,
+      0
+    );
+    const totalErrors = usageRecords.filter(
+      (record) => record.requestStatus !== "success"
+    ).length;
+    const totalLatency = usageRecords.reduce(
+      (sum, record) => sum + record.requestDuration,
+      0
+    );
     const averageLatency = totalLatency / totalRequests;
     const successRate = ((totalRequests - totalErrors) / totalRequests) * 100;
 
@@ -297,7 +332,7 @@ export class DatabaseService {
       tokens: totalTokens,
       errors: totalErrors,
       averageLatency,
-      successRate
+      successRate,
     };
   }
 
@@ -308,7 +343,7 @@ export class DatabaseService {
   async getTodayAPIUsageStats(): Promise<APIUsageStats> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return this.getAPIUsageStats(today);
   }
 
@@ -325,7 +360,7 @@ export class DatabaseService {
       summaryText: prismaData.summaryText,
       repositoryUrl: prismaData.repositoryUrl,
       createdAt: prismaData.createdAt,
-      updatedAt: prismaData.updatedAt
+      updatedAt: prismaData.updatedAt,
     };
   }
 
@@ -343,7 +378,7 @@ export class DatabaseService {
       aiSummaryText: prismaData.aiSummaryText,
       modelUsed: prismaData.modelUsed,
       createdAt: prismaData.createdAt,
-      updatedAt: prismaData.updatedAt
+      updatedAt: prismaData.updatedAt,
     };
   }
 
@@ -367,7 +402,7 @@ export class DatabaseService {
       aiSummaryId: prismaData.aiSummaryId || undefined,
       aiSummaryText: prismaData.aiSummary?.aiSummaryText,
       aiModelUsed: prismaData.aiSummary?.modelUsed,
-      generatedAt: prismaData.aiSummary?.createdAt
+      generatedAt: prismaData.aiSummary?.createdAt,
     };
   }
 
@@ -376,16 +411,19 @@ export class DatabaseService {
    * @param prismaData - Prisma APIUsageTracking object
    * @returns APIUsageTracking type object
    */
-  private transformPrismaUsageToType(prismaData: PrismaAPIUsageTracking): APIUsageTracking {
+  private transformPrismaUsageToType(
+    prismaData: PrismaAPIUsageTracking
+  ): APIUsageTracking {
     return {
       id: prismaData.id,
       requestTimestamp: prismaData.requestTimestamp,
       modelUsed: prismaData.modelUsed,
       tokensUsed: prismaData.tokensUsed,
       requestDuration: prismaData.requestDuration,
-      requestStatus: prismaData.requestStatus as APIUsageTracking['requestStatus'],
+      requestStatus:
+        prismaData.requestStatus as APIUsageTracking["requestStatus"],
       errorMessage: prismaData.errorMessage || undefined,
-      authorName: prismaData.authorName
+      authorName: prismaData.authorName,
     };
   }
 }
