@@ -1,9 +1,10 @@
 // LoadingSpinner - Reusable loading component with different sizes and styles
 // Provides consistent loading states across the application
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  color?: 'blue' | 'green' | 'gray' | 'red';
   text?: string;
   className?: string;
 }
@@ -15,13 +16,6 @@ const sizeClasses = {
   xl: 'h-12 w-12'
 };
 
-const colorClasses = {
-  blue: 'border-blue-600',
-  green: 'border-green-600',
-  gray: 'border-gray-600',
-  red: 'border-red-600'
-};
-
 const textSizeClasses = {
   sm: 'text-xs',
   md: 'text-sm',
@@ -31,22 +25,21 @@ const textSizeClasses = {
 
 export default function LoadingSpinner({ 
   size = 'md', 
-  color = 'blue', 
   text,
   className = ''
 }: LoadingSpinnerProps) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <div className="flex flex-col items-center space-y-2">
-        <div 
-          className={`animate-spin rounded-full border-b-2 ${sizeClasses[size]} ${colorClasses[color]}`}
+        <Skeleton 
+          className={`${sizeClasses[size]} rounded-md`}
           role="status"
           aria-label="Loading"
         >
           <span className="sr-only">Loading...</span>
-        </div>
+        </Skeleton>
         {text && (
-          <span className={`text-gray-600 ${textSizeClasses[size]}`}>
+          <span className={`text-muted-foreground ${textSizeClasses[size]}`}>
             {text}
           </span>
         )}

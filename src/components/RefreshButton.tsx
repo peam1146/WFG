@@ -6,6 +6,7 @@
 import { useState, useTransition } from 'react';
 import { refreshSummaries } from '@/lib/actions/summary-actions';
 import { DailySummary } from '@/types/git';
+import { Button } from '@/components/ui/button';
 
 interface RefreshButtonProps {
   author: string;
@@ -52,10 +53,12 @@ export default function RefreshButton({
 
   return (
     <div className="flex flex-col items-center space-y-2">
-      <button
+      <Button
         onClick={handleRefresh}
         disabled={isDisabled}
-        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        variant="default"
+        size="default"
+        className="bg-green-600 hover:bg-green-700 focus-visible:ring-green-500"
         title={isDisabled ? 'Enter author name to enable refresh' : 'Refresh summaries with latest commits'}
       >
         {isPending ? (
@@ -74,7 +77,7 @@ export default function RefreshButton({
             Refresh Summaries
           </>
         )}
-      </button>
+      </Button>
 
       {lastRefresh && (
         <p className="text-xs text-gray-500 text-center">

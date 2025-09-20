@@ -1,10 +1,10 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 1.1.0
-- Modified principles: I. Modern Stack First (added shadcn/ui requirement)
-- Added sections: UI Component Library standards
-- Technology stack: Bun + Next.js + Tailwind 4 + shadcn/ui
-- Templates requiring updates: ✅ Updated plan-template.md, spec-template.md, tasks-template.md
+- Version change: 1.1.0 → 1.1.1
+- Modified sections: UI Component Library Standards (added MCP guidance)
+- Added guidance: Use MCP shadcn server for latest component information
+- Technology stack: Bun + Next.js + Tailwind 4 + shadcn/ui (unchanged)
+- Templates requiring updates: ✅ No template changes required
 - Follow-up TODOs: None
 -->
 
@@ -46,6 +46,8 @@ Development workflow must prioritize speed and simplicity. Hot reload, fast buil
 
 - **Primary Library**: shadcn/ui MUST be used for all UI components
 - **Installation**: Use `bunx shadcn-ui@latest init` for setup and `bunx shadcn-ui@latest add [component]` for individual components
+- **Documentation Access**: Use MCP shadcn server to get latest component information, usage examples, and best practices before implementation
+- **Component Research**: Query MCP for component availability, props interfaces, and integration patterns
 - **Customization**: Components may be customized but MUST maintain accessibility standards
 - **Consistency**: All custom components MUST be replaced with shadcn/ui equivalents where available
 - **Accessibility**: shadcn/ui components provide built-in accessibility features that MUST be preserved
@@ -77,4 +79,4 @@ Development workflow must prioritize speed and simplicity. Hot reload, fast buil
 
 This constitution supersedes all other development practices. All code changes must align with these principles. Amendments require documentation of rationale and impact assessment.
 
-**Version**: 1.1.0 | **Ratified**: 2025-09-20 | **Last Amended**: 2025-09-20
+**Version**: 1.1.1 | **Ratified**: 2025-09-20 | **Last Amended**: 2025-09-20

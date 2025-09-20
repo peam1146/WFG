@@ -5,6 +5,8 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '@/lib/utils/logger';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   children: ReactNode;
@@ -51,36 +53,37 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Default fallback UI
       return (
-        <div className="min-h-[200px] flex items-center justify-center bg-red-50 border border-red-200 rounded-lg p-6">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <svg className="h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-red-800 mb-2">Something went wrong</h3>
-            <p className="text-sm text-red-600 mb-4">
-              An unexpected error occurred. Please try refreshing the page.
-            </p>
-            <div className="space-y-2">
-              <button
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Refresh Page
-              </button>
-              <details className="text-left">
-                <summary className="text-xs text-red-500 cursor-pointer hover:text-red-700">
-                  Show Error Details
-                </summary>
-                <pre className="mt-2 text-xs text-red-700 bg-red-100 p-2 rounded overflow-auto max-h-32">
-                  {this.state.error?.message}
-                  {'\n'}
-                  {this.state.error?.stack}
-                </pre>
-              </details>
-            </div>
-          </div>
+        <div className="min-h-[200px] flex items-center justify-center p-6">
+          <Alert variant="destructive" className="max-w-lg">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <AlertTitle>Something went wrong</AlertTitle>
+            <AlertDescription className="space-y-4">
+              <p>An unexpected error occurred. Please try refreshing the page.</p>
+              
+              <div className="flex flex-col space-y-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                >
+                  Refresh Page
+                </Button>
+                
+                <details className="text-left">
+                  <summary className="text-xs cursor-pointer hover:opacity-80">
+                    Show Error Details
+                  </summary>
+                  <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto max-h-32 text-muted-foreground">
+                    {this.state.error?.message}
+                    {'\n'}
+                    {this.state.error?.stack}
+                  </pre>
+                </details>
+              </div>
+            </AlertDescription>
+          </Alert>
         </div>
       );
     }

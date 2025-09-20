@@ -6,6 +6,9 @@
 import { useState, useEffect } from 'react';
 import { getAIModelStatus } from '@/lib/actions/ai-status-actions';
 import { AIModelStatus } from '@/types/ai-config';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AIStatusIndicatorProps {
   className?: string;
@@ -51,20 +54,24 @@ export default function AIStatusIndicator({
   if (loading) {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
-        <div className="animate-pulse w-2 h-2 bg-gray-300 rounded-full"></div>
-        <span className="text-xs text-gray-500">Checking AI status...</span>
+        <Skeleton className="w-2 h-2 rounded-full" />
+        <span className="text-xs text-muted-foreground">Checking AI status...</span>
       </div>
     );
   }
 
   if (error || !status) {
     return (
-      <div className={`flex items-center space-x-2 ${className}`}>
-        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-        <span className="text-xs text-red-600">AI Status Unknown</span>
-        {showDetails && error && (
-          <span className="text-xs text-red-500 ml-2">({error})</span>
-        )}
+      <div className={className}>
+        <Alert variant="destructive">
+          <div className="w-2 h-2 bg-destructive rounded-full"></div>
+          <AlertTitle className="text-xs">AI Status Unknown</AlertTitle>
+          {showDetails && error && (
+            <AlertDescription className="text-xs">
+              {error}
+            </AlertDescription>
+          )}
+        </Alert>
       </div>
     );
   }
@@ -90,13 +97,22 @@ export default function AIStatusIndicator({
     return `${status.todayUsage.requests} requests today`;
   };
 
+  const getBadgeVariant = () => {
+    if (!status.isAIEnabled) return 'secondary';
+    if (status.todayUsage.errors > 5) return 'destructive';
+    if (status.lastError) return 'outline';
+    return 'default';
+  };
+
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <div className={`w-2 h-2 rounded-full ${getStatusColor()}`}></div>
-      <span className="text-xs text-gray-700">{getStatusText()}</span>
+      <Badge variant={getBadgeVariant()} className="gap-1">
+        <div className={`w-2 h-2 rounded-full ${getStatusColor()}`}></div>
+        {getStatusText()}
+      </Badge>
       
       {showDetails && (
-        <div className="flex items-center space-x-3 text-xs text-gray-500">
+        <div className="flex items-center space-x-3 text-xs text-muted-foreground">
           <span>•</span>
           <span>{status.currentModel.split('/')[1] || status.currentModel}</span>
           <span>•</span>
@@ -131,41 +147,41 @@ export function AIStatusBadge({ className = '' }: { className?: string }) {
 
   if (loading) {
     return (
-      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500 ${className}`}>
-        <div className="animate-pulse w-1.5 h-1.5 bg-gray-300 rounded-full mr-1"></div>
+      <Badge variant="secondary" className={`gap-1 ${className}`}>
+        <Skeleton className="w-1.5 h-1.5 rounded-full" />
         AI
-      </div>
+      </Badge>
     );
   }
 
   if (!status) {
     return (
-      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-700 ${className}`}>
-        <div className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></div>
+      <Badge variant="destructive" className={`gap-1 ${className}`}>
+        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
         AI
-      </div>
+      </Badge>
     );
   }
 
-  const getBadgeStyle = () => {
-    if (!status.isAIEnabled) return 'bg-gray-100 text-gray-600';
-    if (status.todayUsage.errors > 5) return 'bg-yellow-100 text-yellow-700';
-    if (status.lastError) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-green-100 text-green-700';
+  const getBadgeVariant = () => {
+    if (!status.isAIEnabled) return 'secondary';
+    if (status.todayUsage.errors > 5) return 'destructive';
+    if (status.lastError) return 'outline';
+    return 'default';
   };
 
   const getBadgeColor = () => {
-    if (!status.isAIEnabled) return 'bg-gray-400';
-    if (status.todayUsage.errors > 5) return 'bg-yellow-500';
+    if (!status.isAIEnabled) return 'bg-muted-foreground';
+    if (status.todayUsage.errors > 5) return 'bg-destructive';
     if (status.lastError) return 'bg-yellow-500';
     return 'bg-green-500';
   };
 
   return (
-    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getBadgeStyle()} ${className}`}>
-      <div className={`w-1.5 h-1.5 rounded-full mr-1 ${getBadgeColor()}`}></div>
+    <Badge variant={getBadgeVariant()} className={`gap-1 ${className}`}>
+      <div className={`w-1.5 h-1.5 rounded-full ${getBadgeColor()}`}></div>
       AI
-    </div>
+    </Badge>
   );
 }
 
