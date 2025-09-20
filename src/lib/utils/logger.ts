@@ -126,6 +126,126 @@ class Logger {
       this.warn(message, context, error);
     }
   }
+
+  // AI-specific logging methods
+  aiOperation(operation: string, success: boolean, context?: Record<string, any>, error?: Error): void {
+    const message = `AI operation: ${operation} ${success ? 'succeeded' : 'failed'}`;
+    
+    if (success) {
+      this.info(message, context);
+    } else {
+      this.warn(message, context, error);
+    }
+  }
+
+  aiSummaryGeneration(author: string, date: string, success: boolean, context?: Record<string, any>, error?: Error): void {
+    const message = `AI summary generation for ${author} on ${date} ${success ? 'completed' : 'failed'}`;
+    
+    if (success) {
+      this.info(message, {
+        author,
+        date,
+        ...context
+      });
+    } else {
+      this.warn(message, {
+        author,
+        date,
+        ...context
+      }, error);
+    }
+  }
+
+  aiModelStatus(model: string, available: boolean, context?: Record<string, any>): void {
+    const message = `AI model ${model} is ${available ? 'available' : 'unavailable'}`;
+    
+    if (available) {
+      this.debug(message, { model, ...context });
+    } else {
+      this.warn(message, { model, ...context });
+    }
+  }
+
+  aiCacheOperation(operation: string, author: string, date: string, success: boolean, context?: Record<string, any>): void {
+    const message = `AI cache ${operation} for ${author} on ${date} ${success ? 'succeeded' : 'failed'}`;
+    
+    this.debug(message, {
+      operation,
+      author,
+      date,
+      ...context
+    });
+  }
+
+  aiUsageTracking(model: string, tokens: number, duration: number, status: string, context?: Record<string, any>): void {
+    const message = `AI usage: ${model} - ${tokens} tokens in ${duration}ms (${status})`;
+    
+    this.info(message, {
+      model,
+      tokens,
+      duration,
+      status,
+      ...context
+    });
+  }
+
+  aiConfigValidation(isValid: boolean, errors: string[], warnings: string[], context?: Record<string, any>): void {
+    const message = `AI configuration validation ${isValid ? 'passed' : 'failed'}`;
+    
+    if (isValid && warnings.length === 0) {
+      this.debug(message, context);
+    } else if (isValid && warnings.length > 0) {
+      this.warn(message, {
+        warnings,
+        ...context
+      });
+    } else {
+      this.error(message, {
+        errors,
+        warnings,
+        ...context
+      });
+    }
+  }
+
+  aiServiceConnection(service: string, connected: boolean, responseTime?: number, context?: Record<string, any>): void {
+    const message = `AI service ${service} connection ${connected ? 'successful' : 'failed'}`;
+    
+    if (connected) {
+      this.info(message, {
+        service,
+        responseTime,
+        ...context
+      });
+    } else {
+      this.warn(message, {
+        service,
+        responseTime,
+        ...context
+      });
+    }
+  }
+
+  aiRateLimit(model: string, retryAfter?: number, context?: Record<string, any>): void {
+    const message = `AI rate limit exceeded for ${model}${retryAfter ? ` - retry after ${retryAfter}s` : ''}`;
+    
+    this.warn(message, {
+      model,
+      retryAfter,
+      ...context
+    });
+  }
+
+  aiTokenUsage(model: string, tokensUsed: number, maxTokens: number, context?: Record<string, any>): void {
+    const percentage = (tokensUsed / maxTokens) * 100;
+    const message = `AI token usage: ${tokensUsed}/${maxTokens} (${percentage.toFixed(1)}%) for ${model}`;
+    
+    if (percentage > 90) {
+      this.warn(message, { model, tokensUsed, maxTokens, percentage, ...context });
+    } else {
+      this.debug(message, { model, tokensUsed, maxTokens, percentage, ...context });
+    }
+  }
 }
 
 // Export singleton instance

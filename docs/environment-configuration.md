@@ -18,6 +18,49 @@ None - the application will work with default settings.
 
 #### `DATABASE_URL`
 - **Description**: SQLite database connection string
+- **Default**: `file:./dev.db`
+- **Example**: `file:./wfg.db`
+- **Usage**: Configure database location and connection parameters
+
+### AI Enhancement Variables
+
+#### `OPENROUTER_API_KEY`
+- **Description**: API key for OpenRouter AI service integration
+- **Default**: None (required for AI features)
+- **Example**: `sk-or-v1-abc123def456...`
+- **Usage**: Enable AI-enhanced worklog summarization
+- **Security**: Store securely, never commit to version control
+
+#### `AI_MODEL_PRIMARY`
+- **Description**: Primary AI model for summary generation
+- **Default**: `openai/gpt-4o-mini`
+- **Example**: `anthropic/claude-3-haiku`
+- **Usage**: Configure which AI model to use for worklog summaries
+
+#### `AI_MODEL_FALLBACK`
+- **Description**: Fallback AI model when primary fails
+- **Default**: `anthropic/claude-3-haiku`
+- **Example**: `openai/gpt-3.5-turbo`
+- **Usage**: Backup model for reliability
+
+#### `AI_MAX_TOKENS`
+- **Description**: Maximum tokens for AI API requests
+- **Default**: `1000`
+- **Example**: `2000`
+- **Usage**: Control AI response length and API costs
+
+#### `AI_TEMPERATURE`
+- **Description**: AI model temperature (creativity vs consistency)
+- **Default**: `0.3`
+- **Example**: `0.7`
+- **Usage**: Lower values = more consistent, higher = more creative
+
+#### `AI_ENABLED`
+- **Description**: Enable or disable AI enhancement features
+- **Default**: `true`
+- **Example**: `false`
+- **Usage**: Toggle AI features on/off without removing configuration
+- **Description**: SQLite database connection string
 - **Default**: `file:./dev.db` (development), `file:./test.db` (testing)
 - **Example**: `file:./wfg-production.db`
 - **Usage**: Specify custom database location

@@ -1,9 +1,10 @@
 # WFG - Worklog From Git
 
-A modern Git log viewer with daily summaries featuring Thai Buddhist calendar support. Built with Next.js 14, Server Actions, and TypeScript.
+A modern Git log viewer with **AI-enhanced daily summaries** featuring Thai Buddhist calendar support. Built with Next.js 14, Server Actions, and TypeScript.
 
 ## ✨ Features
 
+### Core Features
 - **Git Commit Filtering**: Filter commits by author and date range (last 31 days)
 - **Daily Summaries**: Automatically generate daily work summaries from Git commits
 - **Thai Buddhist Calendar**: Display dates in Thai format (e.g., "20 ก.ย. 2568")
@@ -13,6 +14,16 @@ A modern Git log viewer with daily summaries featuring Thai Buddhist calendar su
 - **SQLite Database**: Local database for caching summaries
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Performance Optimized**: In-memory caching and optimized queries
+
+### 🤖 AI Enhancement Features
+- **AI-Powered Summaries**: Transform technical Git commits into coherent, business-friendly narratives
+- **Intelligent Contextual Analysis**: AI understands commit patterns and groups related work
+- **Multiple AI Models**: Support for OpenAI GPT-4o-mini and Anthropic Claude 3 Haiku via OpenRouter
+- **Adaptive Prompting**: Smart prompt selection based on commit characteristics
+- **Graceful Fallback**: Seamless fallback to basic summaries when AI is unavailable
+- **Usage Tracking**: Monitor AI API usage, token consumption, and performance metrics
+- **Caching System**: Intelligent caching of AI-generated content for performance
+- **Error Recovery**: Robust error handling with automatic retry and fallback mechanisms
 
 ## 🚀 Quick Start
 
@@ -93,7 +104,7 @@ src/
 
 ### Environment Variables
 
-Create a `.env.local` file (optional):
+Create a `.env.local` file:
 
 ```env
 # Git Repository Path (optional)
@@ -104,7 +115,33 @@ DATABASE_URL=file:./wfg.db
 
 # Node Environment
 NODE_ENV=development
+
+# AI Configuration (for enhanced summaries)
+AI_ENABLED=true
+OPENROUTER_API_KEY=sk-or-your-api-key-here
+AI_MODEL_PRIMARY=openai/gpt-4o-mini
+AI_MODEL_FALLBACK=anthropic/claude-3-haiku
+AI_MAX_TOKENS=1000
+AI_TEMPERATURE=0.3
+AI_TIMEOUT=30000
 ```
+
+### 🤖 AI Setup (Optional)
+
+To enable AI-enhanced summaries:
+
+1. **Get an OpenRouter API key**: Sign up at [openrouter.ai](https://openrouter.ai)
+2. **Add your API key** to `.env.local`:
+   ```env
+   OPENROUTER_API_KEY=sk-or-your-api-key-here
+   ```
+3. **Configure AI models** (optional):
+   ```env
+   AI_MODEL_PRIMARY=openai/gpt-4o-mini     # Primary model
+   AI_MODEL_FALLBACK=anthropic/claude-3-haiku  # Fallback model
+   ```
+
+**Without AI configuration**, the application works perfectly with basic summaries.
 
 See [docs/environment-configuration.md](docs/environment-configuration.md) for detailed configuration options.
 

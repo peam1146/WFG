@@ -19,6 +19,18 @@ export enum ErrorCode {
   CONNECTION_FAILED = 'CONNECTION_FAILED',
   QUERY_FAILED = 'QUERY_FAILED',
   
+  // AI-specific errors
+  AI_SERVICE_UNAVAILABLE = 'AI_SERVICE_UNAVAILABLE',
+  AI_RATE_LIMITED = 'AI_RATE_LIMITED',
+  AI_INVALID_RESPONSE = 'AI_INVALID_RESPONSE',
+  AI_TOKEN_LIMIT_EXCEEDED = 'AI_TOKEN_LIMIT_EXCEEDED',
+  AI_MODEL_NOT_CONFIGURED = 'AI_MODEL_NOT_CONFIGURED',
+  AI_CONFIG_ERROR = 'AI_CONFIG_ERROR',
+  AI_GENERATION_ERROR = 'AI_GENERATION_ERROR',
+  AI_DISABLED = 'AI_DISABLED',
+  AI_TIMEOUT = 'AI_TIMEOUT',
+  AI_NETWORK_ERROR = 'AI_NETWORK_ERROR',
+  
   // Server Action errors
   SERVER_ACTION_ERROR = 'SERVER_ACTION_ERROR',
   UNAUTHORIZED = 'UNAUTHORIZED',
@@ -148,6 +160,83 @@ class ErrorHandler {
   }
 
   /**
+   * Handle AI service errors
+   */
+  handleAIError(operation: string, error: Error, context?: Record<string, any>): AppError {
+    logger.error(`AI operation failed: ${operation}`, context, error);
+    
+    // Check for specific AI error patterns
+    if (error.message.includes('rate limit') || error.message.includes('Rate limit')) {
+      return this.createError(
+        ErrorCode.AI_RATE_LIMITED,
+        `AI rate limit exceeded: ${error.message}`,
+        'AI service rate limit exceeded. Please try again in a few minutes.',
+        { operation, ...context },
+        error
+      );
+    }
+    
+    if (error.message.includes('timeout') || error.message.includes('Request timeout')) {
+      return this.createError(
+        ErrorCode.AI_TIMEOUT,
+        `AI request timeout: ${error.message}`,
+        'AI service is taking too long to respond. Please try again.',
+        { operation, ...context },
+        error
+      );
+    }
+    
+    if (error.message.includes('API key') || error.message.includes('authentication')) {
+      return this.createError(
+        ErrorCode.AI_MODEL_NOT_CONFIGURED,
+        `AI authentication failed: ${error.message}`,
+        'AI service configuration error. Please check your API key.',
+        { operation, ...context },
+        error
+      );
+    }
+    
+    if (error.message.includes('token') && error.message.includes('limit')) {
+      return this.createError(
+        ErrorCode.AI_TOKEN_LIMIT_EXCEEDED,
+        `AI token limit exceeded: ${error.message}`,
+        'Request too large for AI service. Please try with fewer commits.',
+        { operation, ...context },
+        error
+      );
+    }
+    
+    if (error.message.includes('network') || error.message.includes('connection')) {
+      return this.createError(
+        ErrorCode.AI_NETWORK_ERROR,
+        `AI network error: ${error.message}`,
+        'Unable to connect to AI service. Please check your internet connection.',
+        { operation, ...context },
+        error
+      );
+    }
+    
+    if (error.message.includes('unavailable') || error.message.includes('service down')) {
+      return this.createError(
+        ErrorCode.AI_SERVICE_UNAVAILABLE,
+        `AI service unavailable: ${error.message}`,
+        'AI service is currently unavailable. Falling back to basic summaries.',
+        { operation, ...context },
+        error
+      );
+    }
+    
+    // Generic AI error
+    return this.createError(
+      ErrorCode.AI_GENERATION_ERROR,
+      `AI operation failed: ${operation} - ${error.message}`,
+      'AI enhancement failed. Using basic summary instead.',
+      { operation, ...context },
+      error
+    );
+  }
+
+  /**
    * Handle Server Action errors
    */
   handleServerActionError(actionName: string, error: Error, context?: Record<string, any>): AppError {
@@ -156,6 +245,10 @@ class ErrorHandler {
     // Handle known error types
     if (error instanceof ZodError) {
       return this.handleZodError(error, { actionName, ...context });
+    }
+    
+    if (error.message.includes('AI') || error.message.includes('OpenRouter')) {
+      return this.handleAIError(actionName, error, context);
     }
     
     if (error.message.includes('Git')) {

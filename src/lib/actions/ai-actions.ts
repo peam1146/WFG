@@ -1,20 +1,20 @@
-// Server Actions for summary operations
-// Handles summary generation, caching, and refresh functionality
+// AI-Enhanced Server Actions
+// Dedicated Server Actions for AI-powered worklog summarization
 
 'use server';
 
-import { ActionResult } from '@/types/actions';
-import { DailySummary, GitCommit, GitService } from '@/types/git';
-import { EnhancedDailySummary } from '@/types/ai';
-import { RealGitService } from '@/lib/services/git/real-git';
-import { DatabaseService } from '@/lib/services/database';
-import { AIService } from '@/lib/services/ai/ai-service';
-import { OpenRouterAIService } from '@/lib/services/ai/openrouter-ai';
-import { MockAIService } from '@/lib/services/ai/mock-ai';
 import { getAIConfigService } from '@/lib/services/ai-config';
-import { SummaryGenerationFormSchema } from '@/lib/validations/git';
-import { formatThaiDate, isSameDay } from '@/lib/utils/date-formatter';
+import { AIService } from '@/lib/services/ai/ai-service';
+import { MockAIService } from '@/lib/services/ai/mock-ai';
+import { OpenRouterAIService } from '@/lib/services/ai/openrouter-ai';
+import { DatabaseService } from '@/lib/services/database';
+import { RealGitService } from '@/lib/services/git/real-git';
+import { formatThaiDate } from '@/lib/utils/date-formatter';
 import { logger } from '@/lib/utils/logger';
+import { SummaryGenerationFormSchema } from '@/lib/validations/git';
+import { ActionResult } from '@/types/actions';
+import { EnhancedDailySummary } from '@/types/ai';
+import { GitService } from '@/types/git';
 import { ZodError } from 'zod';
 
 // Default services (can be injected for testing)
@@ -22,17 +22,17 @@ const defaultGitService: GitService = new RealGitService();
 const defaultDatabaseService = new DatabaseService();
 
 /**
- * Server Action to generate daily summaries from Git commits with optional AI enhancement
- * @param formData - Form data containing author, since date, optional refresh flag, and useAI flag
+ * Server Action to generate AI-enhanced worklog summaries
+ * @param formData - Form data containing author, since date, and optional parameters
  * @param injectedServices - Optional services for testing
  * @returns ActionResult with EnhancedDailySummary array or error
  */
-export async function generateSummaries(
+export async function generateAISummaries(
   formData: FormData,
   injectedServices?: {
     gitService?: GitService;
-    databaseService?: DatabaseService;
     aiService?: AIService;
+    databaseService?: DatabaseService;
   }
 ): Promise<ActionResult<EnhancedDailySummary[]>> {
   try {
@@ -56,6 +56,16 @@ export async function generateSummaries(
     const repositoryPath = process.env.GIT_REPOSITORY_PATH || process.cwd();
     const repositoryUrl = `file://${repositoryPath}`;
 
+    // Check AI configuration
+    const configService = getAIConfigService();
+    if (!configService.isAIEnabled()) {
+      return {
+        success: false,
+        error: 'AI functionality is disabled',
+        code: 'AI_DISABLED'
+      };
+    }
+
     // Check if we should use cached summaries (unless refresh is requested)
     if (!validatedData.refresh) {
       const existingSummaries = await databaseService.getDailySummaries(
@@ -64,10 +74,18 @@ export async function generateSummaries(
         repositoryUrl
       );
 
-      if (existingSummaries.length > 0) {
+      // Filter for summaries that have AI enhancement
+      const aiSummaries = existingSummaries.filter(summary => summary.hasAISummary);
+      
+      if (aiSummaries.length > 0) {
+        logger.info('Returning cached AI summaries', {
+          author: validatedData.author,
+          count: aiSummaries.length
+        });
+
         return {
           success: true,
-          data: existingSummaries
+          data: aiSummaries
         };
       }
     }
@@ -79,19 +97,28 @@ export async function generateSummaries(
       repositoryPath
     );
 
-    // Determine if AI should be used
-    const useAI = validatedData.useAI && getAIConfigService().isAIEnabled();
+    if (commits.length === 0) {
+      return {
+        success: true,
+        data: []
+      };
+    }
 
-    // Group commits by day and generate summaries with optional AI enhancement
-    const summaries = await generateEnhancedDailySummariesFromCommits(
+    // Generate AI-enhanced summaries
+    const summaries = await generateAIEnhancedSummaries(
       commits,
       validatedData.author,
       repositoryUrl,
       databaseService,
       aiService,
-      validatedData.refresh,
-      useAI
+      validatedData.refresh
     );
+
+    logger.info('AI summaries generated successfully', {
+      author: validatedData.author,
+      summaryCount: summaries.length,
+      aiEnhanced: summaries.filter(s => s.hasAISummary).length
+    });
 
     return {
       success: true,
@@ -99,12 +126,13 @@ export async function generateSummaries(
     };
 
   } catch (error) {
-    console.error('generateSummaries error:', error);
+    logger.error('generateAISummaries error:', {
+      error: error instanceof Error ? error.message : String(error)
+    });
 
     // Handle validation errors
     if (error instanceof ZodError) {
-      // Get the first error message from Zod
-      const errorMessage = error.issues?.[0]?.message || error.message || 'Validation failed';
+      const errorMessage = error.issues?.[0]?.message || 'Validation failed';
       return {
         success: false,
         error: errorMessage,
@@ -112,145 +140,40 @@ export async function generateSummaries(
       };
     }
 
-    // Handle database errors
-    if (error instanceof Error && error.message.includes('Database')) {
-      return {
-        success: false,
-        error: 'Database operation failed',
-        code: 'DATABASE_ERROR'
-      };
+    // Handle AI-specific errors
+    if (error instanceof Error) {
+      if (error.message.includes('AI service unavailable')) {
+        return {
+          success: false,
+          error: 'AI service is currently unavailable',
+          code: 'AI_SERVICE_UNAVAILABLE'
+        };
+      }
+
+      if (error.message.includes('rate limit')) {
+        return {
+          success: false,
+          error: 'AI service rate limit exceeded. Please try again later.',
+          code: 'AI_RATE_LIMITED'
+        };
+      }
+
+      if (error.message.includes('Database')) {
+        return {
+          success: false,
+          error: 'Database operation failed',
+          code: 'DATABASE_ERROR'
+        };
+      }
     }
 
-    // Handle other errors
+    // Generic error
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to generate summaries',
-      code: 'SUMMARY_ERROR'
+      error: error instanceof Error ? error.message : 'Failed to generate AI summaries',
+      code: 'AI_GENERATION_ERROR'
     };
   }
-}
-
-/**
- * Server Action to refresh existing summaries
- * @param author - Git author name
- * @param since - Start date for summaries
- * @param injectedGitService - Optional Git service for testing
- * @param injectedDatabaseService - Optional database service for testing
- * @returns ActionResult with refreshed DailySummary array or error
- */
-export async function refreshSummaries(
-  author: string,
-  since: Date,
-  injectedGitService?: GitService,
-  injectedDatabaseService?: DatabaseService
-): Promise<ActionResult<DailySummary[]>> {
-  try {
-    // Validate inputs
-    if (!author || author.trim().length === 0) {
-      return {
-        success: false,
-        error: 'Author name is required',
-        code: 'VALIDATION_ERROR'
-      };
-    }
-
-    // Use injected services for testing or default services
-    const gitService = injectedGitService || defaultGitService;
-    const databaseService = injectedDatabaseService || defaultDatabaseService;
-
-    // Get repository path and URL
-    const repositoryPath = process.env.GIT_REPOSITORY_PATH || process.cwd();
-    const repositoryUrl = `file://${repositoryPath}`;
-
-    // Fetch fresh commits from Git
-    const commits = await gitService.getCommits(author, since, repositoryPath);
-
-    // Generate fresh summaries (force refresh)
-    const summaries = await generateDailySummariesFromCommits(
-      commits,
-      author,
-      repositoryUrl,
-      databaseService,
-      true // Force refresh
-    );
-
-    return {
-      success: true,
-      data: summaries
-    };
-
-  } catch (error) {
-    console.error('refreshSummaries error:', error);
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to refresh summaries',
-      code: 'REFRESH_ERROR'
-    };
-  }
-}
-
-/**
- * Helper function to generate daily summaries from commits
- * @param commits - Array of Git commits
- * @param authorName - Author name for the summaries
- * @param repositoryUrl - Repository URL
- * @param databaseService - Database service instance
- * @param forceRefresh - Whether to force refresh existing summaries
- * @returns Promise resolving to array of DailySummary objects
- */
-async function generateDailySummariesFromCommits(
-  commits: GitCommit[],
-  authorName: string,
-  repositoryUrl: string,
-  databaseService: DatabaseService,
-  forceRefresh: boolean = false
-): Promise<DailySummary[]> {
-  // Group commits by day
-  const commitsByDay = new Map<string, GitCommit[]>();
-
-  commits.forEach(commit => {
-    const dayKey = commit.date.toDateString();
-    if (!commitsByDay.has(dayKey)) {
-      commitsByDay.set(dayKey, []);
-    }
-    commitsByDay.get(dayKey)!.push(commit);
-  });
-
-  // Generate summaries for each day
-  const summaries: DailySummary[] = [];
-
-  for (const [dayKey, dayCommits] of commitsByDay.entries()) {
-    const summaryDate = new Date(dayKey);
-    
-    // Format Thai date and create bullet points
-    const thaiDate = formatThaiDate(summaryDate);
-    const bulletPoints = dayCommits
-      .sort((a, b) => a.date.getTime() - b.date.getTime()) // Sort by time
-      .map(commit => `- ${commit.message}`);
-    
-    const summaryText = `${thaiDate}\n${bulletPoints.join('\n')}`;
-
-    // Create or update summary in database
-    const summaryData = {
-      authorName,
-      summaryDate,
-      summaryText,
-      repositoryUrl
-    };
-
-    let summary: DailySummary;
-    if (forceRefresh) {
-      summary = await databaseService.upsertSummary(summaryData);
-    } else {
-      summary = await databaseService.createSummary(summaryData);
-    }
-
-    summaries.push(summary);
-  }
-
-  // Sort summaries by date
-  return summaries.sort((a, b) => a.summaryDate.getTime() - b.summaryDate.getTime());
 }
 
 /**
@@ -266,6 +189,12 @@ async function createAIService(): Promise<AIService> {
 
   try {
     const config = configService.getEnvironmentConfig();
+    
+    if (!config.apiKey) {
+      logger.warn('No API key configured, using mock AI service');
+      return new MockAIService();
+    }
+
     return new OpenRouterAIService({
       apiKey: config.apiKey,
       timeout: config.timeout
@@ -279,27 +208,25 @@ async function createAIService(): Promise<AIService> {
 }
 
 /**
- * Enhanced helper function to generate daily summaries with AI integration
+ * Generate AI-enhanced summaries from commits
  * @param commits - Array of Git commits
  * @param authorName - Author name for the summaries
  * @param repositoryUrl - Repository URL
  * @param databaseService - Database service instance
  * @param aiService - AI service instance
  * @param forceRefresh - Whether to force refresh existing summaries
- * @param useAI - Whether to use AI enhancement
  * @returns Promise resolving to array of EnhancedDailySummary objects
  */
-async function generateEnhancedDailySummariesFromCommits(
-  commits: GitCommit[],
+async function generateAIEnhancedSummaries(
+  commits: any[],
   authorName: string,
   repositoryUrl: string,
   databaseService: DatabaseService,
   aiService: AIService,
-  forceRefresh: boolean = false,
-  useAI: boolean = true
+  forceRefresh: boolean = false
 ): Promise<EnhancedDailySummary[]> {
   // Group commits by day
-  const commitsByDay = new Map<string, GitCommit[]>();
+  const commitsByDay = new Map<string, any[]>();
 
   commits.forEach(commit => {
     const dayKey = commit.date.toDateString();
@@ -317,7 +244,7 @@ async function generateEnhancedDailySummariesFromCommits(
     
     // Check for existing AI summary unless forcing refresh
     let existingAISummary = null;
-    if (!forceRefresh && useAI) {
+    if (!forceRefresh) {
       existingAISummary = await databaseService.getAISummary(authorName, summaryDate);
       
       // Verify commit hashes match (cache invalidation)
@@ -347,7 +274,7 @@ async function generateEnhancedDailySummariesFromCommits(
     let aiModelUsed: string | undefined;
 
     // Generate or use existing AI summary
-    if (useAI && !existingAISummary) {
+    if (!existingAISummary) {
       try {
         const configService = getAIConfigService();
         const generationConfig = configService.getGenerationConfig();
@@ -358,7 +285,14 @@ async function generateEnhancedDailySummariesFromCommits(
           commitCount: dayCommits.length
         });
 
+        const startTime = Date.now();
+        console.log('Generating AI summary', {
+          author: authorName,
+          date: summaryDate.toISOString(),
+          commitCount: dayCommits.length
+        });
         const aiSummary = await aiService.generateSummary(dayCommits, generationConfig);
+        const duration = Date.now() - startTime;
         
         if (aiSummary && aiSummary.trim().length > 0) {
           // Save AI summary to database
@@ -377,8 +311,8 @@ async function generateEnhancedDailySummariesFromCommits(
           // Record API usage
           await databaseService.recordAPIUsage({
             modelUsed: generationConfig.model,
-            tokensUsed: Math.floor(aiSummary.length / 4), // Rough estimation
-            requestDuration: 2000, // Placeholder - would be measured in real implementation
+            tokensUsed: Math.floor(aiSummary.length / 4),
+            requestDuration: duration,
             requestStatus: 'success',
             authorName
           });
@@ -387,27 +321,37 @@ async function generateEnhancedDailySummariesFromCommits(
             author: authorName,
             date: summaryDate.toISOString(),
             model: generationConfig.model,
+            duration,
             summaryLength: aiSummary.length
+          });
+        } else {
+          logger.warn('AI service returned empty summary', {
+            author: authorName,
+            date: summaryDate.toISOString()
           });
         }
       } catch (error) {
-        logger.warn('AI summary generation failed, using basic summary', {
+        logger.error('AI summary generation failed', {
           author: authorName,
           date: summaryDate.toISOString(),
           error: error instanceof Error ? error.message : String(error)
         });
 
         // Record API usage failure
+        const configService = getAIConfigService();
         await databaseService.recordAPIUsage({
-          modelUsed: getAIConfigService().getGenerationConfig().model,
+          modelUsed: configService.getGenerationConfig().model,
           tokensUsed: 0,
           requestDuration: 1000,
           requestStatus: 'error',
           errorMessage: error instanceof Error ? error.message : String(error),
           authorName
         });
+
+        // Re-throw error to be handled by caller
+        throw error;
       }
-    } else if (existingAISummary) {
+    } else {
       // Use existing AI summary
       aiSummaryId = existingAISummary.id;
       aiSummaryText = existingAISummary.aiSummaryText;

@@ -154,6 +154,22 @@ export const repositoryCache = new MemoryCache({
   maxSize: 20
 });
 
+// AI-specific cache instances
+export const aiSummariesCache = new MemoryCache({
+  ttl: 60 * 60 * 1000, // 1 hour for AI summaries (longer than basic summaries)
+  maxSize: 200
+});
+
+export const aiModelStatusCache = new MemoryCache({
+  ttl: 5 * 60 * 1000, // 5 minutes for AI model status
+  maxSize: 10
+});
+
+export const aiConfigCache = new MemoryCache({
+  ttl: 15 * 60 * 1000, // 15 minutes for AI configuration
+  maxSize: 5
+});
+
 /**
  * Generate cache key for Git commits
  */
@@ -173,6 +189,34 @@ export function generateSummariesCacheKey(author: string, since: Date, repositor
  */
 export function generateRepositoryCacheKey(repositoryPath: string): string {
   return `repo:${repositoryPath}`;
+}
+
+/**
+ * Generate cache key for AI summaries
+ */
+export function generateAISummaryCacheKey(author: string, since: Date, repositoryUrl: string): string {
+  return `ai:summary:${author}:${since.toISOString()}:${repositoryUrl}`;
+}
+
+/**
+ * Generate cache key for AI model status
+ */
+export function generateAIModelStatusCacheKey(model?: string): string {
+  return `ai:status:${model || 'default'}`;
+}
+
+/**
+ * Generate cache key for AI configuration
+ */
+export function generateAIConfigCacheKey(configType: string = 'default'): string {
+  return `ai:config:${configType}`;
+}
+
+/**
+ * Generate cache key for AI usage statistics
+ */
+export function generateAIUsageCacheKey(author: string, date: Date): string {
+  return `ai:usage:${author}:${date.toDateString()}`;
 }
 
 /**
@@ -216,13 +260,21 @@ export function startCacheCleanup(intervalMs: number = 5 * 60 * 1000): NodeJS.Ti
     const gitRemoved = gitCommitsCache.cleanup();
     const summariesRemoved = summariesCache.cleanup();
     const repoRemoved = repositoryCache.cleanup();
+    const aiSummariesRemoved = aiSummariesCache.cleanup();
+    const aiStatusRemoved = aiModelStatusCache.cleanup();
+    const aiConfigRemoved = aiConfigCache.cleanup();
     
-    const totalRemoved = gitRemoved + summariesRemoved + repoRemoved;
+    const totalRemoved = gitRemoved + summariesRemoved + repoRemoved + 
+                        aiSummariesRemoved + aiStatusRemoved + aiConfigRemoved;
+    
     if (totalRemoved > 0) {
       logger.info('Periodic cache cleanup completed', {
         gitCommitsRemoved: gitRemoved,
         summariesRemoved: summariesRemoved,
         repositoryRemoved: repoRemoved,
+        aiSummariesRemoved: aiSummariesRemoved,
+        aiStatusRemoved: aiStatusRemoved,
+        aiConfigRemoved: aiConfigRemoved,
         totalRemoved
       });
     }
@@ -236,6 +288,53 @@ export function getAllCacheStats() {
   return {
     gitCommits: gitCommitsCache.getStats(),
     summaries: summariesCache.getStats(),
-    repository: repositoryCache.getStats()
+    repository: repositoryCache.getStats(),
+    aiSummaries: aiSummariesCache.getStats(),
+    aiModelStatus: aiModelStatusCache.getStats(),
+    aiConfig: aiConfigCache.getStats()
+  };
+}
+
+/**
+ * Clear all AI-related caches
+ */
+export function clearAICaches(): void {
+  aiSummariesCache.clear();
+  aiModelStatusCache.clear();
+  aiConfigCache.clear();
+  logger.info('All AI caches cleared');
+}
+
+/**
+ * Clear AI summaries cache for specific author and date range
+ */
+export function clearAISummariesForAuthor(author: string, since?: Date): void {
+  const stats = aiSummariesCache.getStats();
+  let clearedCount = 0;
+  
+  for (const key of stats.keys) {
+    if (key.includes(`ai:summary:${author}`)) {
+      if (!since || key.includes(since.toISOString())) {
+        aiSummariesCache.delete(key);
+        clearedCount++;
+      }
+    }
+  }
+  
+  logger.info('AI summaries cache cleared for author', {
+    author,
+    since: since?.toISOString(),
+    clearedCount
+  });
+}
+
+/**
+ * Get AI cache statistics
+ */
+export function getAICacheStats() {
+  return {
+    aiSummaries: aiSummariesCache.getStats(),
+    aiModelStatus: aiModelStatusCache.getStats(),
+    aiConfig: aiConfigCache.getStats()
   };
 }

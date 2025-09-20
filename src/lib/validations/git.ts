@@ -87,7 +87,11 @@ export const SummaryGenerationFormSchema = z.object({
   refresh: z.string()
     .nullable()
     .optional()
-    .transform(val => val === 'true')
+    .transform(val => val === 'true'),
+  useAI: z.string()
+    .nullable()
+    .optional()
+    .transform(val => val !== 'false')
 });
 
 /**

@@ -19,6 +19,55 @@ model DailySummary {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
+  // AI Enhancement fields
+  hasAISummary  Boolean @default(false)
+  aiSummaryId   Int?
+  aiSummary     AISummary? @relation(fields: [aiSummaryId], references: [id])
+  
   @@unique([authorName, summaryDate, repositoryUrl])
   @@index([authorName, summaryDate])
+}
+
+model AISummary {
+  id              Int      @id @default(autoincrement())
+  authorName      String
+  summaryDate     DateTime
+  commitHashList  String   // JSON array of commit hashes
+  aiSummaryText   String
+  modelUsed       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relationships
+  dailySummaries  DailySummary[]
+  
+  @@unique([authorName, summaryDate])
+  @@index([authorName, summaryDate])
+}
+
+model AIModelConfiguration {
+  id              Int      @id @default(autoincrement())
+  modelIdentifier String   @unique
+  providerName    String
+  maxTokens       Int      @default(1000)
+  temperature     Float    @default(0.3)
+  isActive        Boolean  @default(true)
+  isPrimary       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  @@index([isPrimary])
+}
+
+model APIUsageTracking {
+  id               Int      @id @default(autoincrement())
+  requestTimestamp DateTime @default(now())
+  modelUsed        String
+  tokensUsed       Int
+  requestDuration  Int      // milliseconds
+  requestStatus    String   // success, error, timeout, rate_limited
+  errorMessage     String?
+  authorName       String
+  
+  @@index([requestTimestamp])
+  @@index([authorName])
 }
