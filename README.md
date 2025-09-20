@@ -18,12 +18,14 @@ A modern Git log viewer with **AI-enhanced daily summaries** featuring Thai Budd
 ### 🤖 AI Enhancement Features
 - **AI-Powered Summaries**: Transform technical Git commits into coherent, business-friendly narratives
 - **Intelligent Contextual Analysis**: AI understands commit patterns and groups related work
-- **Multiple AI Models**: Support for OpenAI GPT-4o-mini and Anthropic Claude 3 Haiku via OpenRouter
+- **Multiple AI Models**: Support for Google Gemini 2.5 Pro and Anthropic Claude 3 Haiku via OpenRouter
 - **Adaptive Prompting**: Smart prompt selection based on commit characteristics
 - **Graceful Fallback**: Seamless fallback to basic summaries when AI is unavailable
 - **Usage Tracking**: Monitor AI API usage, token consumption, and performance metrics
 - **Caching System**: Intelligent caching of AI-generated content for performance
 - **Error Recovery**: Robust error handling with automatic retry and fallback mechanisms
+- **Smart Git Integration**: Case-insensitive author matching and multi-branch commit detection
+- **Refresh Functionality**: Intelligent refresh with fallback to cached data when no new commits found
 
 ## 🚀 Quick Start
 
@@ -64,10 +66,10 @@ A modern Git log viewer with **AI-enhanced daily summaries** featuring Thai Budd
 
 ## 🛠️ Technology Stack
 
-- **Framework**: Next.js 14.0.4 with App Router
+- **Framework**: Next.js 15.5.3 with App Router
 - **Runtime**: Bun v1.2.19
 - **Language**: TypeScript with strict configuration
-- **Styling**: Tailwind CSS 4.1.13
+- **Styling**: Tailwind CSS with shadcn/ui components
 - **Database**: SQLite with Prisma ORM
 - **Git Integration**: simple-git library
 - **Validation**: Zod schemas
@@ -81,6 +83,7 @@ src/
 ├── app/                    # Next.js App Router
 │   └── page.tsx           # Main application page
 ├── components/            # React components
+│   ├── ui/               # shadcn/ui components (Button, Card, Input, etc.)
 │   ├── GitFilterForm.tsx  # Filter form (client)
 │   ├── GitCommitsList.tsx # Commits display (server)
 │   ├── DailySummariesView.tsx # Summaries display (server)
@@ -119,7 +122,7 @@ NODE_ENV=development
 # AI Configuration (for enhanced summaries)
 AI_ENABLED=true
 OPENROUTER_API_KEY=sk-or-your-api-key-here
-AI_MODEL_PRIMARY=openai/gpt-4o-mini
+AI_MODEL_PRIMARY=google/gemini-2.5-pro
 AI_MODEL_FALLBACK=anthropic/claude-3-haiku
 AI_MAX_TOKENS=1000
 AI_TEMPERATURE=0.3
@@ -137,7 +140,7 @@ To enable AI-enhanced summaries:
    ```
 3. **Configure AI models** (optional):
    ```env
-   AI_MODEL_PRIMARY=openai/gpt-4o-mini     # Primary model
+   AI_MODEL_PRIMARY=google/gemini-2.5-pro     # Primary model
    AI_MODEL_FALLBACK=anthropic/claude-3-haiku  # Fallback model
    ```
 
@@ -198,7 +201,9 @@ bun run start        # Start production server
 bun run lint         # Run ESLint
 bun run test         # Run tests
 bun run db:migrate   # Run database migrations
+bun run db:generate  # Regenerate Prisma client
 bun run db:studio    # Open Prisma Studio
+bun run db:reset     # Reset database (development only)
 ```
 
 ### Adding New Features
