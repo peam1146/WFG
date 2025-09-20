@@ -1,9 +1,10 @@
 <!--
 Sync Impact Report:
-- Version change: Initial → 1.0.0
-- New constitution for WFG (Worklog From Git) project
-- Technology stack: Bun + Next.js + Tailwind 4
-- Templates requiring updates: ✅ Initial setup
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: I. Modern Stack First (added shadcn/ui requirement)
+- Added sections: UI Component Library standards
+- Technology stack: Bun + Next.js + Tailwind 4 + shadcn/ui
+- Templates requiring updates: ✅ Updated plan-template.md, spec-template.md, tasks-template.md
 - Follow-up TODOs: None
 -->
 
@@ -13,7 +14,7 @@ Sync Impact Report:
 
 ### I. Modern Stack First
 
-All development MUST use the established technology stack: Bun as runtime and package manager, Next.js as React framework, Tailwind 4 for styling. No alternative technologies without explicit justification and approval. CLI tools (bun, bunx) are preferred for initialization and package management over manual configuration.
+All development MUST use the established technology stack: Bun as runtime and package manager, Next.js as React framework, Tailwind 4 for styling, and shadcn/ui for component library. No alternative technologies without explicit justification and approval. CLI tools (bun, bunx) are preferred for initialization and package management over manual configuration.
 
 ### II. Git-Centric Workflow
 
@@ -38,7 +39,16 @@ Development workflow must prioritize speed and simplicity. Hot reload, fast buil
 - **Runtime**: Bun (latest stable)
 - **Framework**: Next.js (latest stable with App Router)
 - **Styling**: Tailwind CSS 4.x
+- **UI Components**: shadcn/ui (latest stable)
 - **Package Manager**: Bun (no npm/yarn/pnpm)
+
+### UI Component Library Standards
+
+- **Primary Library**: shadcn/ui MUST be used for all UI components
+- **Installation**: Use `bunx shadcn-ui@latest init` for setup and `bunx shadcn-ui@latest add [component]` for individual components
+- **Customization**: Components may be customized but MUST maintain accessibility standards
+- **Consistency**: All custom components MUST be replaced with shadcn/ui equivalents where available
+- **Accessibility**: shadcn/ui components provide built-in accessibility features that MUST be preserved
 
 ### Code Quality
 
@@ -67,4 +77,4 @@ Development workflow must prioritize speed and simplicity. Hot reload, fast buil
 
 This constitution supersedes all other development practices. All code changes must align with these principles. Amendments require documentation of rationale and impact assessment.
 
-**Version**: 1.0.0 | **Ratified**: 2025-09-20 | **Last Amended**: 2025-09-20
+**Version**: 1.1.0 | **Ratified**: 2025-09-20 | **Last Amended**: 2025-09-20
