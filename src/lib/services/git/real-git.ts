@@ -9,8 +9,8 @@ import { GitService } from "./git-service";
 export class RealGitService implements GitService {
   private git: SimpleGit;
 
-  constructor(repositoryPath?: string) {
-    this.git = simpleGit(repositoryPath || process.cwd());
+  constructor() {
+    this.git = simpleGit(process.env.GIT_REPOSITORY_PATH || process.cwd());
   }
 
   async getCommits(

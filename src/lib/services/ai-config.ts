@@ -1,10 +1,13 @@
 // AI Configuration Service
 // Manages AI model configuration and environment-based settings
 
-import { AIModelConfiguration, AIModelStatus, AIEnvironmentConfig } from '@/types/ai-config';
-import { APIUsageStats } from '@/types/api-usage';
-import { DatabaseService } from './database';
-import { logger } from '@/lib/utils/logger';
+import { logger } from "@/lib/utils/logger";
+import {
+  AIEnvironmentConfig,
+  AIModelConfiguration,
+  AIModelStatus,
+} from "@/types/ai-config";
+import { DatabaseService } from "./database";
 
 export class AIConfigService {
   private databaseService: DatabaseService;
@@ -24,22 +27,24 @@ export class AIConfigService {
       const [currentModel, fallbackModel, todayUsage] = await Promise.all([
         this.getCurrentModel(),
         this.getFallbackModel(),
-        this.databaseService.getTodayAPIUsageStats()
+        this.databaseService.getTodayAPIUsageStats(),
       ]);
 
       return {
-        currentModel: currentModel?.modelIdentifier || this.envConfig.primaryModel,
-        fallbackModel: fallbackModel?.modelIdentifier || this.envConfig.fallbackModel,
+        currentModel:
+          currentModel?.modelIdentifier || this.envConfig.primaryModel,
+        fallbackModel:
+          fallbackModel?.modelIdentifier || this.envConfig.fallbackModel,
         isAIEnabled: this.envConfig.enabled,
         todayUsage,
-        lastError: await this.getLastError()
+        lastError: await this.getLastError(),
       };
     } catch (error) {
-      logger.error('Failed to get AI model status', {
-        error: error instanceof Error ? error.message : String(error)
+      logger.error("Failed to get AI model status", {
+        error: error instanceof Error ? error.message : String(error),
       });
-      
-      throw new Error('Failed to retrieve AI model status');
+
+      throw new Error("Failed to retrieve AI model status");
     }
   }
 
@@ -51,8 +56,10 @@ export class AIConfigService {
     try {
       // First try to get from database
       const models = await this.getAllModels();
-      const primaryModel = models.find(model => model.isPrimary && model.isActive);
-      
+      const primaryModel = models.find(
+        (model) => model.isPrimary && model.isActive
+      );
+
       if (primaryModel) {
         return primaryModel;
       }
@@ -60,10 +67,13 @@ export class AIConfigService {
       // Fallback to environment configuration
       return this.createModelFromEnv(this.envConfig.primaryModel, true);
     } catch (error) {
-      logger.warn('Failed to get current model from database, using environment config', {
-        error: error instanceof Error ? error.message : String(error)
-      });
-      
+      logger.warn(
+        "Failed to get current model from database, using environment config",
+        {
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+
       return this.createModelFromEnv(this.envConfig.primaryModel, true);
     }
   }
@@ -75,18 +85,23 @@ export class AIConfigService {
   async getFallbackModel(): Promise<AIModelConfiguration | null> {
     try {
       const models = await this.getAllModels();
-      const fallbackModel = models.find(model => !model.isPrimary && model.isActive);
-      
+      const fallbackModel = models.find(
+        (model) => !model.isPrimary && model.isActive
+      );
+
       if (fallbackModel) {
         return fallbackModel;
       }
 
       return this.createModelFromEnv(this.envConfig.fallbackModel, false);
     } catch (error) {
-      logger.warn('Failed to get fallback model from database, using environment config', {
-        error: error instanceof Error ? error.message : String(error)
-      });
-      
+      logger.warn(
+        "Failed to get fallback model from database, using environment config",
+        {
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+
       return this.createModelFromEnv(this.envConfig.fallbackModel, false);
     }
   }
@@ -100,7 +115,7 @@ export class AIConfigService {
     // For now, return environment-based configurations
     return [
       this.createModelFromEnv(this.envConfig.primaryModel, true),
-      this.createModelFromEnv(this.envConfig.fallbackModel, false)
+      this.createModelFromEnv(this.envConfig.fallbackModel, false),
     ].filter(Boolean) as AIModelConfiguration[];
   }
 
@@ -118,36 +133,38 @@ export class AIConfigService {
 
     // Check if AI is enabled
     if (!this.envConfig.enabled) {
-      warnings.push('AI functionality is disabled');
+      warnings.push("AI functionality is disabled");
     }
 
     // Check API key
     if (!this.envConfig.apiKey) {
-      errors.push('OPENROUTER_API_KEY environment variable is required');
-    } else if (!this.envConfig.apiKey.startsWith('sk-or-')) {
-      warnings.push('API key format may be incorrect for OpenRouter');
+      errors.push("OPENROUTER_API_KEY environment variable is required");
+    } else if (!this.envConfig.apiKey.startsWith("sk-or-")) {
+      warnings.push("API key format may be incorrect for OpenRouter");
     }
 
     // Check model configurations
     if (!this.envConfig.primaryModel) {
-      errors.push('AI_MODEL_PRIMARY environment variable is required');
+      errors.push("AI_MODEL_PRIMARY environment variable is required");
     }
 
     if (!this.envConfig.fallbackModel) {
-      warnings.push('AI_MODEL_FALLBACK not configured - no fallback available');
+      warnings.push("AI_MODEL_FALLBACK not configured - no fallback available");
     }
 
     // Check numeric configurations
     if (this.envConfig.maxTokens < 100 || this.envConfig.maxTokens > 8000) {
-      warnings.push('AI_MAX_TOKENS should be between 100 and 8000');
+      warnings.push("AI_MAX_TOKENS should be between 100 and 8000");
     }
 
     if (this.envConfig.temperature < 0 || this.envConfig.temperature > 2) {
-      warnings.push('AI_TEMPERATURE should be between 0 and 2');
+      warnings.push("AI_TEMPERATURE should be between 0 and 2");
     }
 
     if (this.envConfig.timeout < 5000) {
-      warnings.push('AI timeout less than 5 seconds may cause frequent failures');
+      warnings.push(
+        "AI timeout less than 5 seconds may cause frequent failures"
+      );
     }
 
     // Test model availability if no errors
@@ -155,17 +172,17 @@ export class AIConfigService {
       try {
         const currentModel = await this.getCurrentModel();
         if (!currentModel) {
-          errors.push('Failed to load current AI model configuration');
+          errors.push("Failed to load current AI model configuration");
         }
       } catch (error) {
-        errors.push('Failed to validate AI model configuration');
+        errors.push("Failed to validate AI model configuration");
       }
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -179,7 +196,7 @@ export class AIConfigService {
       model: modelOverride || this.envConfig.primaryModel,
       maxTokens: this.envConfig.maxTokens,
       temperature: this.envConfig.temperature,
-      timeout: this.envConfig.timeout
+      timeout: this.envConfig.timeout,
     };
   }
 
@@ -213,13 +230,14 @@ export class AIConfigService {
    */
   private loadEnvironmentConfig(): AIEnvironmentConfig {
     return {
-      enabled: process.env.AI_ENABLED?.toLowerCase() !== 'false',
-      primaryModel: process.env.AI_MODEL_PRIMARY || 'openai/gpt-4o-mini',
-      fallbackModel: process.env.AI_MODEL_FALLBACK || 'anthropic/claude-3-haiku',
-      maxTokens: parseInt(process.env.AI_MAX_TOKENS || '1000'),
-      temperature: parseFloat(process.env.AI_TEMPERATURE || '0.3'),
-      apiKey: process.env.OPENROUTER_API_KEY || '',
-      timeout: parseInt(process.env.AI_TIMEOUT || '30000')
+      enabled: process.env.AI_ENABLED?.toLowerCase() !== "false",
+      primaryModel: process.env.AI_MODEL_PRIMARY || "google/gemini-2.5-pro",
+      fallbackModel:
+        process.env.AI_MODEL_FALLBACK || "anthropic/claude-3-haiku",
+      maxTokens: parseInt(process.env.AI_MAX_TOKENS || "1000"),
+      temperature: parseFloat(process.env.AI_TEMPERATURE || "0.3"),
+      apiKey: process.env.OPENROUTER_API_KEY || "",
+      timeout: parseInt(process.env.AI_TIMEOUT || "30000"),
     };
   }
 
@@ -230,20 +248,20 @@ export class AIConfigService {
    * @returns AIModelConfiguration object
    */
   private createModelFromEnv(
-    modelIdentifier: string, 
+    modelIdentifier: string,
     isPrimary: boolean
   ): AIModelConfiguration {
-    const [provider] = modelIdentifier.split('/');
-    
+    const [provider] = modelIdentifier.split("/");
+
     return {
       id: isPrimary ? 1 : 2,
       modelIdentifier,
-      providerName: provider || 'openrouter',
+      providerName: provider || "openrouter",
       maxTokens: this.envConfig.maxTokens,
       temperature: this.envConfig.temperature,
       isActive: true,
       isPrimary,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
   }
 
@@ -257,8 +275,8 @@ export class AIConfigService {
       // For now, return undefined
       return undefined;
     } catch (error) {
-      logger.debug('Failed to get last error from usage tracking', {
-        error: error instanceof Error ? error.message : String(error)
+      logger.debug("Failed to get last error from usage tracking", {
+        error: error instanceof Error ? error.message : String(error),
       });
       return undefined;
     }
